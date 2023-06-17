@@ -3,6 +3,7 @@ package com.tree.assignment.services;
 import com.tree.assignment.dto.AccountDto;
 import com.tree.assignment.mapper.AccountRowMapper;
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 
@@ -23,18 +24,27 @@ public class AccountServiceImpl implements AccountService {
 
     @Override
     public List<AccountDto> findByAccountType(String accountType) {
-        return jdbcTemplate.query(
+
+        List<AccountDto> queryResult = jdbcTemplate.query(
                 SELECT_ALL_SQL + "  WHERE account_type = ?",
                 new Object[]{accountType}, new AccountRowMapper());
+        if (!queryResult.isEmpty()) {
+            return queryResult;
+        } else {
+            throw new EmptyResultDataAccessException("No results found for the query with " + accountType, 0);
+        }
     }
 
     @Override
     public AccountDto findById(int id) {
-        return jdbcTemplate.queryForObject(
-                SELECT_ALL_SQL + "WHERE ID = ?",
-                new Object[]{id}, new AccountRowMapper());
+        try {
+            AccountDto queryForObject = jdbcTemplate.queryForObject(
+                    SELECT_ALL_SQL + "WHERE ID = ?",
+                    new Object[]{id}, new AccountRowMapper());
+            return queryForObject;
+        } catch (EmptyResultDataAccessException e) {
 
+            throw new EmptyResultDataAccessException("No results found for the query with Id" + id, 0);
+        }
     }
-
-
 }
